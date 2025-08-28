@@ -1,0 +1,27 @@
+{
+  "name": "group-bill-tracker-backend",
+  "version": "1.0.0",
+  "description": "backend of group bill tracker app",
+  "homepage": "https://github.com/haip1290/group-bill-tracker-backend#readme",
+  "bugs": {
+    "url": "https://github.com/haip1290/group-bill-tracker-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haip1290/group-bill-tracker-backend.git"
+  },
+  "license": "ISC",
+  "author": "haipt1290",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
