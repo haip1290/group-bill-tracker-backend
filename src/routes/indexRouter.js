@@ -6,5 +6,6 @@ const userController = require("../controller/userController");
 
 indexRouter.get("/", indexController.index);
 indexRouter.post("/register", userController.createUser);
+indexRouter.post("/login", userController.login);
 
 module.exports = indexRouter;
