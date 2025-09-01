@@ -1,5 +1,5 @@
 const { PrismaClient } = require("../generated/prisma");
-
+const { resourceExistErrorHandler } = require("./prismaErrorHandler");
 const prisma = new PrismaClient();
 
 const userRepository = {
@@ -13,6 +13,7 @@ const userRepository = {
       return newUser;
     } catch (error) {
       console.error("Error inserting user into DB ", error);
+      resourceExistErrorHandler(error);
       throw error;
     }
   },
