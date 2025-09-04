@@ -35,14 +35,56 @@ const userController = {
         return res.status(500).json({ message });
       }
 
-      const token = jwt.sign(payload, secret, { expiresIn: "24h" });
+      const accessToken = jwt.sign(payload, secret, { expiresIn: "1h" });
+      const refreshToken = jwt.sign(payload, secret, { expiresIn: "7d" });
+      res.cookie("jwt", refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production",
+      });
       const message = "Login successful";
       return res.json({
         message,
-        data: { token: token, user: userToDto(user) },
+        data: { accessToken, user: userToDto(user) },
       });
     })(req, res);
   },
+  refresh: asyncHandler(async (req, res) => {
+    // check refresh token from cookie
+    const refreshToken = req.cookies.jwt;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "No refresh token provided" });
+    }
+    // check secret
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error("JWT secret is not define");
+      res.status(500).json("Server configuration error");
+    }
+
+    try {
+      // verify token
+      const decodedPayload = jwt.verify(refreshToken, secret);
+      const user = await userRepository.getUserById(decodedPayload.id);
+      if (!user) {
+        return res
+          .status(401)
+          .json({ message: "Invalid token or user not found" });
+      }
+      // create new access token then return
+      const payload = { id: user.id };
+      const newAccessToken = jwt.sign(payload, secret, { expiresIn: "1h" });
+      return res.json({
+        message: "New access token generated",
+        data: { accessToken: newAccessToken },
+      });
+    } catch (error) {
+      console.error("Token refresh failed ", error);
+      return res
+        .status(401)
+        .json({ message: "Unauthorized. Please login again" });
+    }
+  }),
   getDashboard: [
     passport.authenticate("jwt", { session: false }),
     (req, res) => {
