@@ -76,7 +76,7 @@ const userController = {
       const newAccessToken = jwt.sign(payload, secret, { expiresIn: "1h" });
       return res.json({
         message: "New access token generated",
-        data: { accessToken: newAccessToken },
+        data: { accessToken: newAccessToken, user: userToDto(user) },
       });
     } catch (error) {
       console.error("Token refresh failed ", error);
@@ -87,8 +87,13 @@ const userController = {
   }),
   getDashboard: [
     passport.authenticate("jwt", { session: false }),
-    (req, res) => {
-      return res.json({ message: "Dashboard" });
+    async (req, res) => {
+      const id = req.user.id;
+      const user = await userRepository.getUserById(id);
+      return res.json({
+        message: "Dashboard",
+        data: { user: userToDto(user) },
+      });
     },
   ],
 };
