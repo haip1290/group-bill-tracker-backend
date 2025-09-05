@@ -96,6 +96,10 @@ const userController = {
       });
     },
   ],
+  logout: (req, res) => {
+    res.clearCookie("jwt");
+    return res.json({ message: "Logout successful" });
+  },
 };
 
 module.exports = userController;
