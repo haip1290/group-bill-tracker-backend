@@ -3,11 +3,11 @@ const { resourceExistErrorHandler } = require("./prismaErrorHandler");
 const prisma = new PrismaClient();
 
 const userRepository = {
-  createUser: async (user) => {
+  createUser: async (userDto) => {
     console.log("Inserting new user");
     try {
       const newUser = await prisma.user.create({
-        data: user,
+        data: userDto,
       });
       console.log("User created", newUser.id);
       return newUser;

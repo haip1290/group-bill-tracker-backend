@@ -1,10 +1,15 @@
 const resourceExistErrorHandler = (err) => {
   if (err.code === "P2002") {
-    console.error(err);
-    const resource = err.meta.modelName;
-    const field = err.meta.target;
-    throw new Error(`${resource} with ${field} already exists`);
+    const { modelName, field } = err.meta;
+    throw new Error(`${modelName} with ${field} already exists`);
   }
 };
 
-module.exports = { resourceExistErrorHandler };
+const resourceNotFoundErrorHandler = (err) => {
+  if (err.code === "P2025") {
+    const { modelName, field } = err.meta;
+    throw new Error(`${modelName} with ${field} not found`);
+  }
+};
+
+module.exports = { resourceExistErrorHandler, resourceNotFoundErrorHandler };
