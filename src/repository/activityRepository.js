@@ -48,13 +48,27 @@ const activityRepository = {
       throw error;
     }
   },
-  updateActivityById: async (data) => {
-    console.log("Updating activity by id ", data.id);
-    const { id, ...updatedData } = data;
+  /**
+   * @description this function update activity with provided
+   * data (name, data, totalCost and participants etc...)
+   * @param {object} data
+   * @returns {object} updated activity
+   */
+  updateActivityById: async (activityDto) => {
+    console.log("Updating activity by id ", activityDto.id);
+    const { id, participantsToUpdate, participantsToCreate, ...updatedData } =
+      activityDto;
     try {
       const updatedActivity = await prisma.activity.update({
-        data: updatedData,
+        data: {
+          ...updatedData,
+          participants: {
+            update: participantsToUpdate,
+            create: participantsToCreate,
+          },
+        },
         where: { id },
+        include: { participants: { include: { account: true } } },
       });
       console.log("updated activity with id ", updatedActivity.id);
       return updatedActivity;

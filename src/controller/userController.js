@@ -5,8 +5,19 @@ const jwt = require("jsonwebtoken");
 const { userToDto } = require("./mapper/mapper");
 const passport = require("../auth/passport");
 const validateUserRegister = require("../validators/userValidator");
+const {
+  generateToken,
+  setRefreshTokenCookie,
+  verifyToken,
+} = require("../services/authService");
 
 const userController = {
+  /**
+   * @description middleware chain to han dle user registration
+   * validate incoming request body from frontend
+   * create new user in database
+   * @returns JSON response object
+   */
   createUser: [
     validateUserRegister,
     asyncHandler(async (req, res) => {
@@ -20,28 +31,26 @@ const userController = {
       return res.json({ message: "User created", data: userToDto(newUser) });
     }),
   ],
-
+  /**
+   * @description this middleware handle user login
+   * authenticate user
+   * create access token and refresh token
+   * input cookie in response header with refresh token
+   * @param {object} req frontend request
+   * @param {object} res response to frontend
+   * @returns {object} response object withtoken and user info if success, or error message if failure
+   */
   login: (req, res) => {
     passport.authenticate("local", { session: false }, (err, user, info) => {
+      if (err) return next(err);
       if (!user) {
         const message = info ? info.message : "Invalid credentials";
         return res.status(400).json({ message });
       }
       const payload = { id: user.id };
-      const secret = process.env.JWT_SECRET;
-      if (!secret) {
-        console.error("JWT secret is not defined");
-        const message = "Server configuration error";
-        return res.status(500).json({ message });
-      }
+      const { accessToken, refreshToken } = generateToken(payload);
+      setRefreshTokenCookie(res, refreshToken);
 
-      const accessToken = jwt.sign(payload, secret, { expiresIn: "1h" });
-      const refreshToken = jwt.sign(payload, secret, { expiresIn: "7d" });
-      res.cookie("jwt", refreshToken, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === "production",
-      });
       const message = "Login successful";
       return res.json({
         message,
@@ -49,22 +58,21 @@ const userController = {
       });
     })(req, res);
   },
+  /**
+   * @description function to get new access token
+   * from refresh token in request's cookie
+   * @returns {object} response with new access token and user info
+   */
   refresh: asyncHandler(async (req, res) => {
     // check refresh token from cookie
     const refreshToken = req.cookies.jwt;
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
-    // check secret
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      console.error("JWT secret is not define");
-      res.status(500).json("Server configuration error");
-    }
 
     try {
       // verify token
-      const decodedPayload = jwt.verify(refreshToken, secret);
+      const decodedPayload = verifyToken(refreshToken, secret);
       const user = await userRepository.getUserById(decodedPayload.id);
       if (!user) {
         return res
@@ -73,7 +81,7 @@ const userController = {
       }
       // create new access token then return
       const payload = { id: user.id };
-      const newAccessToken = jwt.sign(payload, secret, { expiresIn: "1h" });
+      const {accessToken: newAccessToken} = generateToken(payload);
       return res.json({
         message: "New access token generated",
         data: { accessToken: newAccessToken, user: userToDto(user) },
@@ -85,17 +93,22 @@ const userController = {
         .json({ message: "Unauthorized. Please login again" });
     }
   }),
-  getDashboard: [
-    passport.authenticate("jwt", { session: false }),
-    async (req, res) => {
-      const id = req.user.id;
-      const user = await userRepository.getUserById(id);
-      return res.json({
-        message: "Dashboard",
-        data: { user: userToDto(user) },
-      });
-    },
-  ],
+
+  getDashboard: async (req, res) => {
+    const user = req.user;
+    return res.json({
+      message: "Dashboard",
+      data: { user: userToDto(user) },
+    });
+  },
+
+  /**
+   * @description function logout user
+   * by clearing refresh token in cookie header
+   * @param {object} req
+   * @param {object} res
+   * @returns {object} response with message
+   */
   logout: (req, res) => {
     res.clearCookie("jwt");
     return res.json({ message: "Logout successful" });
