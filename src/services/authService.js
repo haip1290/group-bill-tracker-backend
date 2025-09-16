@@ -5,6 +5,8 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not define in environments variables");
 }
 
+const isProduction = process.env.NODE_ENV === "PROD";
+
 /**
  * @description Generates access token and a refresh token for a user
  * @param {object} payload - The payload to create token
@@ -13,6 +15,7 @@ if (!JWT_SECRET) {
 const generateToken = (payload) => {
   const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
   const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  console.log("Generated new token");
   return { accessToken, refreshToken };
 };
 
@@ -23,10 +26,12 @@ const generateToken = (payload) => {
  */
 
 const setRefreshTokenCookie = (res, refreshToken) => {
+  console.log("env var ", process.env.NODE_ENV);
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
-    maxAge: 7 * 24 * 6 * 6 * 1000,
-    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "Lax",
   });
 };
 

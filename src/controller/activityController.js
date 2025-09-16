@@ -29,6 +29,20 @@ const activityController = {
       });
     }),
   ],
+
+  getActivities: asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    console.log("Fetching activities by user Id ", userId);
+    const { activities, count } =
+      await activityRepository.getActivitiesByUserId(userId);
+    const activitiesDto = activities.map(activityToDto);
+    console.log(`Successfully fetched ${count} activities`);
+    return res.json({
+      message: "Fetch activities successfully",
+      data: { activities: activitiesDto, count },
+    });
+  }),
+
   updateActivity: [
     validateActivityDtoToUpdate,
     asyncHandler(async (req, res) => {

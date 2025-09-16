@@ -21,6 +21,7 @@ model Activity {
   date         DateTime
   totalCost    Decimal
   participants Participant[]
+  isDeleted    Boolean       @default(false)
 }
 
 model Participant {
@@ -30,6 +31,7 @@ model Participant {
   accountId  Int
   activity   Activity @relation(fields: [activityId], references: [id])
   activityId Int
+  isDeleted  Boolean  @default(false)
 
   @@unique([accountId, activityId])
 }

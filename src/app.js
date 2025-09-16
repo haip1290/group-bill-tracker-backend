@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const publicRouter = require("./routes/publicRouter");
 const userRouter = require("./routes/userRouter");
@@ -10,7 +11,12 @@ const activityRouter = require("./routes/activityRoute");
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+const corsOptions = {
+  origin: "http://localhost:5173",
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use("/", publicRouter);
 app.use("/auth", authRouter);

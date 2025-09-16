@@ -4,6 +4,9 @@ const authenticateJwt = require("../auth/authMiddleware");
 
 const activityRouter = Router();
 
-activityRouter.post("/", authenticateJwt, activityController.createActivity);
+activityRouter.use(authenticateJwt);
+
+activityRouter.post("/", activityController.createActivity);
+activityRouter.route("/:id", activityController.updateActivity);
 
 module.exports = activityRouter;

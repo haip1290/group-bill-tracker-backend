@@ -1,7 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const userRepository = require("../repository/userRepository");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const { userToDto } = require("./mapper/mapper");
 const passport = require("../auth/passport");
 const validateUserRegister = require("../validators/userValidator");
@@ -50,7 +49,7 @@ const userController = {
       const payload = { id: user.id };
       const { accessToken, refreshToken } = generateToken(payload);
       setRefreshTokenCookie(res, refreshToken);
-
+      console.log("Cookie set ");
       const message = "Login successful";
       return res.json({
         message,
@@ -64,15 +63,18 @@ const userController = {
    * @returns {object} response with new access token and user info
    */
   refresh: asyncHandler(async (req, res) => {
+    console.log("Attempt to refresh token");
     // check refresh token from cookie
+    console.log("Cookie ", req.cookies);
     const refreshToken = req.cookies.jwt;
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
 
     try {
+      console.log("Verify token");
       // verify token
-      const decodedPayload = verifyToken(refreshToken, secret);
+      const decodedPayload = verifyToken(refreshToken);
       const user = await userRepository.getUserById(decodedPayload.id);
       if (!user) {
         return res
@@ -81,7 +83,8 @@ const userController = {
       }
       // create new access token then return
       const payload = { id: user.id };
-      const {accessToken: newAccessToken} = generateToken(payload);
+      console.log("Generate new token");
+      const { accessToken: newAccessToken } = generateToken(payload);
       return res.json({
         message: "New access token generated",
         data: { accessToken: newAccessToken, user: userToDto(user) },
@@ -95,6 +98,8 @@ const userController = {
   }),
 
   getDashboard: async (req, res) => {
+    console.log("Getting dashboard");
+    console.log("cookies ", req.cookies);
     const user = req.user;
     return res.json({
       message: "Dashboard",
