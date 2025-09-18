@@ -30,6 +30,23 @@ const userRepository = {
       throw error;
     }
   },
+  getUsersByEmailSearch: async (searchWord) => {
+    console.log("Query for user by email contain ", searchWord);
+    try {
+      const users = await prisma.user.findMany({
+        where: { email: { search: searchWord } },
+        take: 10,
+      });
+      console.log("Found users with email contain search word");
+      return users;
+    } catch (error) {
+      console.error(
+        "Error querying for user by email contain search word",
+        error
+      );
+      throw error;
+    }
+  },
   getUserById: async (id) => {
     console.log("Query user by id");
     try {

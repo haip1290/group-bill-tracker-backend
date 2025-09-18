@@ -4,6 +4,9 @@ const authenticateJwt = require("../auth/authMiddleware");
 
 const userRouter = Router();
 
-userRouter.get("/dashboard", authenticateJwt, userController.getDashboard);
+userRouter.use(authenticateJwt);
+
+userRouter.get("/dashboard", userController.getDashboard);
+userRouter.set("/search", userController.searchUser);
 
 module.exports = userRouter;

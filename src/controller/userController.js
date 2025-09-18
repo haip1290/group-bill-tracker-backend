@@ -107,6 +107,27 @@ const userController = {
     });
   },
 
+  searchUser: asyncHandler(async (req, res) => {
+    // get search word from query string
+    const searchWord = req.query.q;
+    // validate search word
+    if (!searchWord || searchWord.length < 3) {
+      return res.status(400).json({
+        message: "Search term must be at least 3 character long",
+        data: { user: [] },
+      });
+    }
+    // search for user from repo
+    console.log("Searching for users contain ", searchWord);
+    const users = await userRepository.getUsersByEmailSearch(searchWord);
+    const usersDto = users.map((user) => userToDto(user));
+    console.log("Found users with search word");
+    return res.json({
+      message: "Search completed successfully",
+      data: { users: usersDto },
+    });
+  }),
+
   /**
    * @description function logout user
    * by clearing refresh token in cookie header
