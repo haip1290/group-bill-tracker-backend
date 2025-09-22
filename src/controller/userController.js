@@ -99,7 +99,6 @@ const userController = {
 
   getDashboard: async (req, res) => {
     console.log("Getting dashboard");
-    console.log("cookies ", req.cookies);
     const user = req.user;
     return res.json({
       message: "Dashboard",

@@ -11,7 +11,9 @@ const activityController = {
     validateActivityDtoToCreate,
     asyncHandler(async (req, res) => {
       console.log("Creating new activity");
+      console.log("body ", req.body);
       const { name, totalCost, date, users } = req.body;
+      const activityDate = new Date(date);
       const participants = users.map((participant) => ({
         accountId: participant.userId,
         amount: participant.amount,
@@ -19,7 +21,7 @@ const activityController = {
       const newActivity = await activityRepository.createActivity({
         name,
         totalCost,
-        date,
+        date: activityDate,
         participants,
       });
       console.log("Created actvity ", newActivity.id);
