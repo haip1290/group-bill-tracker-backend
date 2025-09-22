@@ -34,7 +34,7 @@ const userRepository = {
     console.log("Query for user by email contain ", searchWord);
     try {
       const users = await prisma.user.findMany({
-        where: { email: { search: searchWord } },
+        where: { email: { contains: searchWord } },
         take: 10,
       });
       console.log("Found users with email contain search word");
