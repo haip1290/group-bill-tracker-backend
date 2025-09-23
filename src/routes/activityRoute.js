@@ -6,6 +6,7 @@ const activityRouter = Router();
 
 activityRouter.use(authenticateJwt);
 
+activityRouter.get("/", activityController.getActivities);
 activityRouter.post("/", activityController.createActivity);
 activityRouter.route("/:id", activityController.updateActivity);
 

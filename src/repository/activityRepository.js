@@ -32,7 +32,7 @@ const activityRepository = {
   getActivitiesByUserId: async (userId) => {
     console.log("Getting activities by user id ", userId);
     try {
-      const { activities, count } = await prisma.$transaction([
+      const [activities, count] = await prisma.$transaction([
         prisma.activity.findMany({
           where: { participants: { some: { accountId: userId } } },
           include: { participants: { include: { account: true } } },
