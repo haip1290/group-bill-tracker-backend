@@ -8,6 +8,8 @@ const activityToDto = (activity) => ({
 const participantToDto = (participant) => ({
   id: participant.id,
   amount: participant.amount,
-  email: participant.account.email,
+  email: participant.account?.email,
+  accountId: participant.accountId,
+  activityId: participant.activityId,
 });
-module.exports = { userToDto, activityToDto };
+module.exports = { userToDto, activityToDto, participantToDto };

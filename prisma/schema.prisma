@@ -22,6 +22,7 @@ model Activity {
   date         DateTime
   totalCost    Decimal
   participants Participant[]
+  isFullyPaid  Boolean       @default(false)
   isDeleted    Boolean       @default(false)
 }
 

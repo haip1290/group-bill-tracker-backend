@@ -24,13 +24,30 @@ const activityRepository = {
       throw error;
     }
   },
+
+  getActivityById: async (id) => {
+    console.log("Query activity by Id");
+    try {
+      const activity = await prisma.activity.findUnique({
+        where: id,
+        include: { participants: true },
+      });
+      console.log("Found activity ", activity.id);
+      return activity;
+    } catch (error) {
+      console.error("Error while query activity by id ", error);
+      resourceNotFoundErrorHandler(error);
+      throw error;
+    }
+  },
+
   /**
    * @description thsi function find all activity that user participated in
    * @param {number} userId id of user
    * @returns {Array} activities that user participated in
    */
   getActivitiesByUserId: async (userId) => {
-    console.log("Getting activities by user id ", userId);
+    console.log("Query activities by user id ", userId);
     try {
       const [activities, count] = await prisma.$transaction([
         prisma.activity.findMany({
@@ -48,6 +65,7 @@ const activityRepository = {
       throw error;
     }
   },
+
   /**
    * @description this function update activity with provided
    * data (name, data, totalCost and participants etc...)
