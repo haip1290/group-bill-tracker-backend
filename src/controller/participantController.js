@@ -8,10 +8,10 @@ const {
 
 const isFullyPaid = (activity) => {
   const totalPaid = activity.participants.reduce(
-    (sum, participant) => sum + participant.amount,
+    (sum, participant) => sum + Number(participant.amount),
     0
   );
-  return totalPaid === activity.totalCost;
+  return totalPaid >= Number(activity.totalCost);
 };
 
 const participantController = {
@@ -20,7 +20,7 @@ const participantController = {
     asyncHandler(async (req, res) => {
       const id = req.params.id;
       console.log("Updating participant by id ", id);
-      const data = req.body;
+      const data = { id: Number(id), ...req.body };
       try {
         const updatedParticipant =
           await participantRepository.updateParticipantById(data);

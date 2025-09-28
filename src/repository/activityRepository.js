@@ -74,8 +74,13 @@ const activityRepository = {
    */
   updateActivityById: async (activityDto) => {
     console.log("Updating activity by id ", activityDto.id);
-    const { id, participantsToUpdate, participantsToCreate, ...updatedData } =
-      activityDto;
+    const {
+      id,
+      participantsToUpdate,
+      participantsToCreate,
+      participantsToDelete,
+      ...updatedData
+    } = activityDto;
     try {
       const updatedActivity = await prisma.activity.update({
         data: {
@@ -83,6 +88,7 @@ const activityRepository = {
           participants: {
             update: participantsToUpdate,
             create: participantsToCreate,
+            delete: participantsToDelete,
           },
         },
         where: { id },

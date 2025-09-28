@@ -7,6 +7,7 @@ const publicRouter = require("./routes/publicRouter");
 const userRouter = require("./routes/userRouter");
 const authRouter = require("./routes/authRoute");
 const activityRouter = require("./routes/activityRoute");
+const participantRouter = require("./routes/participantRoute");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/", publicRouter);
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
 app.use("/activities", activityRouter);
+app.use("/participants", participantRouter);
 
 app.use((err, req, res, next) => {
   return res.status(500).json({ message: "Error", error: err.message });

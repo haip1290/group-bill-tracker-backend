@@ -50,8 +50,14 @@ const activityController = {
     asyncHandler(async (req, res) => {
       console.log("Updating activity");
       const id = parseInt(req.params.id);
-      const { oldParticipants, newParticipants, name, totalCost, date } =
-        req.body;
+      const {
+        oldParticipants,
+        newParticipants,
+        deletedParticipants,
+        name,
+        totalCost,
+        date,
+      } = req.body;
       const participantsToUpdate = oldParticipants.map((participant) => ({
         where: { id: participant.id },
         data: { amount: participant.amount },
@@ -60,6 +66,9 @@ const activityController = {
         accountId: participant.userId,
         amount: participant.amount,
       }));
+      const participantsToDelete = deletedParticipants.map((participant) => ({
+        id: participant.id,
+      }));
       const activityDto = {
         id,
         name,
@@ -67,6 +76,7 @@ const activityController = {
         date,
         participantsToUpdate,
         participantsToCreate,
+        participantsToDelete,
       };
       const updatedActivity =
         await activityRepository.updateActivityById(activityDto);

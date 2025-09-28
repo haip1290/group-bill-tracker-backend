@@ -1,6 +1,7 @@
 const userToDto = (user) => ({ id: user.id, email: user.email });
 const activityToDto = (activity) => ({
   id: activity.id,
+  date: activity.date,
   name: activity.name,
   totalCost: activity.totalCost,
   participants: activity.participants.map(participantToDto),
