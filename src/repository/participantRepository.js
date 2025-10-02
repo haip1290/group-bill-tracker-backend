@@ -14,7 +14,8 @@ const participantRepository = {
       console.log("Updated participant");
       return updatedParticipant;
     } catch (error) {
-      console.error("Error while updating participant by id ", error);
+      const errMsg = "Error while updating participant by id ";
+      console.error(errMsg, error);
       resourceNotFoundErrorHandler(error);
       throw error;
     }

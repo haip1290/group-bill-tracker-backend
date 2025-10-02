@@ -12,7 +12,8 @@ const userRepository = {
       console.log("User created", newUser.id);
       return newUser;
     } catch (error) {
-      console.error("Error inserting user into DB ", error);
+      const errMsg = "Error inserting user into DB ";
+      console.error(errMsg, error);
       resourceExistErrorHandler(error);
       throw error;
     }
@@ -26,7 +27,8 @@ const userRepository = {
       console.log("User found", user);
       return user;
     } catch (error) {
-      console.error("Error querying user from DB ", error);
+      const errMsg = "Error querying user from DB ";
+      console.error(errMsg, error);
       throw error;
     }
   },
@@ -40,10 +42,8 @@ const userRepository = {
       console.log("Found users with email contain search word");
       return users;
     } catch (error) {
-      console.error(
-        "Error querying for user by email contain search word",
-        error
-      );
+      const errMsg = "Error querying for user by email contain search word";
+      console.error(errMsg, error);
       throw error;
     }
   },
@@ -56,7 +56,8 @@ const userRepository = {
       console.log("User found", user);
       return user;
     } catch (error) {
-      console.error("Error querying user from DB ", error);
+      const errMsg = "Error querying user from DB ";
+      console.error(errMsg, error);
       throw error;
     }
   },

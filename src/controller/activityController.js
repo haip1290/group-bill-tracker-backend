@@ -34,7 +34,7 @@ const activityController = {
 
   getActivities: asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    console.log("Fetching activities by user Id ", userId);
+    console.log("Getting activities by user Id ", userId);
     const { activities, count } =
       await activityRepository.getActivitiesByUserId(userId);
     const activitiesDto = activities.map(activityToDto);
@@ -42,6 +42,17 @@ const activityController = {
     return res.json({
       message: "Fetch activities successfully",
       data: { activities: activitiesDto, count },
+    });
+  }),
+
+  getActivityById: asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    console.log("Getting activity by id ", id);
+    const activity = await activityRepository.getActivityById(id);
+    console.log(`Found activity by id ${activity.id}`);
+    return res.json({
+      message: `Found activity by id ${activity.id}`,
+      data: activityToDto(activity),
     });
   }),
 

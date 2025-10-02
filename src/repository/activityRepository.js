@@ -20,22 +20,24 @@ const activityRepository = {
       console.log("inserted activity with id ", activity.id);
       return activity;
     } catch (error) {
-      console.error("Error inserting new activity ", error);
+      const errMsg = "Error inserting new activity ";
+      console.error(errMsg, error);
       throw error;
     }
   },
 
   getActivityById: async (id) => {
-    console.log("Query activity by Id");
+    console.log("Query activity by Id ", id);
     try {
-      const activity = await prisma.activity.findUnique({
+      const activity = await prisma.activity.findUniqueOrThrow({
         where: id,
         include: { participants: true },
       });
       console.log("Found activity ", activity.id);
       return activity;
     } catch (error) {
-      console.error("Error while query activity by id ", error);
+      const errMsg = "Error while query activity by id ";
+      console.error(errMsg, error);
       resourceNotFoundErrorHandler(error);
       throw error;
     }
@@ -61,7 +63,8 @@ const activityRepository = {
       console.log(`Queried ${count} activities by user id ${userId}`);
       return { activities, count };
     } catch (error) {
-      console.error("Error getting activities by user id ", error);
+      const errMsg = "Error getting activities by user id ";
+      console.error(errMsg, error);
       throw error;
     }
   },
@@ -97,7 +100,8 @@ const activityRepository = {
       console.log("updated activity with id ", updatedActivity.id);
       return updatedActivity;
     } catch (error) {
-      console.error("Error updating activity ", error);
+      const errMsg = "Error updating activity ";
+      console.error(errMsg, error);
       resourceNotFoundErrorHandler(error);
       throw error;
     }
@@ -119,7 +123,8 @@ const activityRepository = {
       console.log("Deleted activity with id ", deletedActivity.id);
       return deletedActivity;
     } catch (error) {
-      console.error("Error deleting activity by id ", error);
+      const errMsg = "Error deleting activity by id ";
+      console.error(errMsg, error);
       resourceNotFoundErrorHandler(error);
       throw error;
     }

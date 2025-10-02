@@ -26,7 +26,17 @@ app.use("/activities", activityRouter);
 app.use("/participants", participantRouter);
 
 app.use((err, req, res, next) => {
-  return res.status(500).json({ message: "Error", error: err.message });
+  const status =
+    err.status && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (err.status === 500) {
+    console.error("Unhandled Server Error: ", err);
+  }
+
+  const responseBody = { message: err.message || "Internal Server Error" };
+  if (err.details) {
+    responseBody.details = err.details;
+  }
+  return res.status(status).json(responseBody);
 });
 
 const PORT = process.env.PORT || 3000;
