@@ -22,7 +22,7 @@ const activityRepository = {
     } catch (error) {
       const errMsg = "Error inserting new activity ";
       console.error(errMsg, error);
-      throw error;
+      throw new Error(errMsg);
     }
   },
 
@@ -30,8 +30,8 @@ const activityRepository = {
     console.log("Query activity by Id ", id);
     try {
       const activity = await prisma.activity.findUniqueOrThrow({
-        where: id,
-        include: { participants: true },
+        where: { id },
+        include: { participants: { include: { account: true } } },
       });
       console.log("Found activity ", activity.id);
       return activity;
@@ -39,7 +39,7 @@ const activityRepository = {
       const errMsg = "Error while query activity by id ";
       console.error(errMsg, error);
       resourceNotFoundErrorHandler(error);
-      throw error;
+      throw new Error("Error querying activity by Id");
     }
   },
 
@@ -65,7 +65,7 @@ const activityRepository = {
     } catch (error) {
       const errMsg = "Error getting activities by user id ";
       console.error(errMsg, error);
-      throw error;
+      throw new Error(errMsg);
     }
   },
 

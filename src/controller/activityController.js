@@ -6,6 +6,41 @@ const {
   validateActivityDtoToUpdate,
 } = require("../validators/activityValidator");
 
+const findParticipantsToUpdate = (currentParticipants, updatedParticipants) => {
+  const currentIdsSet = new Set(
+    currentParticipants.map((participant) => participant.id)
+  );
+  return updatedParticipants
+    .filter((participant) => currentIdsSet.has(participant.id))
+    .map((participant) => ({
+      where: { id: participant.id },
+      data: { amount: participant.amount },
+    }));
+};
+
+const findParticipantsToCreate = (currentParticipants, updatedParticipants) => {
+  const currentIdsSet = new Set(
+    currentParticipants.map((participant) => participant.id)
+  );
+  return updatedParticipants
+    .filter((participant) => !currentIdsSet.has(participant.id))
+    .map((participant) => ({
+      accountId: participant.userId,
+      amount: participant.amount,
+    }));
+};
+
+const findParticipantToDelete = (currentParticipants, updatedParticipants) => {
+  const updatedIdsSet = new Set(
+    updatedParticipants.map((participant) => participant.id)
+  );
+  return currentParticipants
+    .filter((participant) => !updatedIdsSet.has(participant.id))
+    .map((participant) => ({
+      id: participant.id,
+    }));
+};
+
 const activityController = {
   createActivity: [
     validateActivityDtoToCreate,
@@ -60,28 +95,33 @@ const activityController = {
     validateActivityDtoToUpdate,
     asyncHandler(async (req, res) => {
       console.log("Updating activity");
-      const id = parseInt(req.params.id);
+      const activityId = parseInt(req.params.id);
       const {
-        oldParticipants,
-        newParticipants,
-        deletedParticipants,
+        participants: updatedParticipants,
         name,
         totalCost,
         date,
       } = req.body;
-      const participantsToUpdate = oldParticipants.map((participant) => ({
-        where: { id: participant.id },
-        data: { amount: participant.amount },
-      }));
-      const participantsToCreate = newParticipants.map((participant) => ({
-        accountId: participant.userId,
-        amount: participant.amount,
-      }));
-      const participantsToDelete = deletedParticipants.map((participant) => ({
-        id: participant.id,
-      }));
+      // get current activity data
+      const activity = await activityRepository.getActivityById(activityId);
+      const currentParticipants = activity.participants;
+      // find common participants between current and frontend provided participants list to update
+      const participantsToUpdate = findParticipantsToUpdate(
+        currentParticipants,
+        updatedParticipants
+      );
+      // find new participants that are not in current participants list
+      const participantsToCreate = findParticipantsToCreate(
+        currentParticipants,
+        updatedParticipants
+      );
+      // find removed participants that are no longer in current list
+      const participantsToDelete = findParticipantToDelete(
+        currentParticipants,
+        updatedParticipants
+      );
       const activityDto = {
-        id,
+        id: activityId,
         name,
         totalCost,
         date,
