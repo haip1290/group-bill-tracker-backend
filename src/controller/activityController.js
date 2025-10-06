@@ -8,24 +8,21 @@ const {
 
 const findParticipantsToUpdate = (currentParticipants, updatedParticipants) => {
   const currentIdsSet = new Set(
-    currentParticipants.map((participant) => participant.id)
+    currentParticipants.map((participant) => participant.accountId)
   );
   return updatedParticipants
-    .filter((participant) => currentIdsSet.has(participant.id))
+    .filter((participant) => currentIdsSet.has(participant.accountId))
     .map((participant) => ({
       where: { id: participant.id },
       data: { amount: participant.amount },
     }));
 };
 
-const findParticipantsToCreate = (currentParticipants, updatedParticipants) => {
-  const currentIdsSet = new Set(
-    currentParticipants.map((participant) => participant.id)
-  );
+const findParticipantsToCreate = (updatedParticipants) => {
   return updatedParticipants
-    .filter((participant) => !currentIdsSet.has(participant.id))
+    .filter((participant) => !participant.id)
     .map((participant) => ({
-      accountId: participant.userId,
+      accountId: participant.accountId,
       amount: participant.amount,
     }));
 };
@@ -50,7 +47,7 @@ const activityController = {
       const { name, totalCost, date, users } = req.body;
       const activityDate = new Date(date);
       const participants = users.map((participant) => ({
-        accountId: participant.userId,
+        accountId: participant.accountId,
         amount: participant.amount,
       }));
       const newActivity = await activityRepository.createActivity({
@@ -111,20 +108,21 @@ const activityController = {
         updatedParticipants
       );
       // find new participants that are not in current participants list
-      const participantsToCreate = findParticipantsToCreate(
-        currentParticipants,
-        updatedParticipants
-      );
+      const participantsToCreate =
+        findParticipantsToCreate(updatedParticipants);
       // find removed participants that are no longer in current list
       const participantsToDelete = findParticipantToDelete(
         currentParticipants,
         updatedParticipants
       );
+      console.log("to update ", participantsToUpdate);
+      console.log("to create ", participantsToCreate);
+      console.log("to delete ", participantsToDelete);
       const activityDto = {
         id: activityId,
         name,
         totalCost,
-        date,
+        date: new Date(date),
         participantsToUpdate,
         participantsToCreate,
         participantsToDelete,
