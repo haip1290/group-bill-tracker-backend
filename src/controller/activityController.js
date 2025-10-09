@@ -7,34 +7,36 @@ const {
 } = require("../validators/activityValidator");
 
 const findParticipantsToUpdate = (currentParticipants, updatedParticipants) => {
-  const currentIdsSet = new Set(
-    currentParticipants.map((participant) => participant.accountId)
+  const currentParticipantsMap = new Map(
+    currentParticipants.map((p) => [p.accountId, p])
   );
   return updatedParticipants
-    .filter((participant) => currentIdsSet.has(participant.accountId))
-    .map((participant) => ({
-      where: { id: participant.id },
-      data: { amount: participant.amount },
+    .filter(
+      (p) =>
+        currentParticipantsMap.has(p.accountId) &&
+        currentParticipantsMap.get(p.accountId).amount !== p.amount
+    )
+    .map((p) => ({
+      where: { id: currentParticipantsMap.get(p.accountId).id },
+      data: { amount: p.amount },
     }));
 };
 
 const findParticipantsToCreate = (updatedParticipants) => {
   return updatedParticipants
-    .filter((participant) => !participant.id)
-    .map((participant) => ({
-      accountId: participant.accountId,
-      amount: participant.amount,
+    .filter((p) => !p.id)
+    .map((p) => ({
+      accountId: p.accountId,
+      amount: p.amount,
     }));
 };
 
 const findParticipantToDelete = (currentParticipants, updatedParticipants) => {
-  const updatedIdsSet = new Set(
-    updatedParticipants.map((participant) => participant.id)
-  );
+  const updatedIdsSet = new Set(updatedParticipants.map((p) => p.id));
   return currentParticipants
-    .filter((participant) => !updatedIdsSet.has(participant.id))
-    .map((participant) => ({
-      id: participant.id,
+    .filter((p) => !updatedIdsSet.has(p.id))
+    .map((p) => ({
+      id: p.id,
     }));
 };
 
@@ -115,9 +117,6 @@ const activityController = {
         currentParticipants,
         updatedParticipants
       );
-      console.log("to update ", participantsToUpdate);
-      console.log("to create ", participantsToCreate);
-      console.log("to delete ", participantsToDelete);
       const activityDto = {
         id: activityId,
         name,

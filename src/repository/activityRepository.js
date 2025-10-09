@@ -106,6 +106,20 @@ const activityRepository = {
       throw error;
     }
   },
+  softDeleteActivityById: async (id) => {
+    console.log("Soft-delete activity by id ", id);
+    try {
+      const updatedActivity = await prisma.activity.update({
+        data: { deletedAt: new Date() },
+        where: { id },
+        include: { participants: true },
+      });
+    } catch (error) {
+      console.error("Error soft-deleting error by id ", error);
+      resourceNotFoundErrorHandler(error);
+      throw error;
+    }
+  },
   /**
    * @description this function perform transaction to delete participants of activity
    * then delete the activity itself

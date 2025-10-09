@@ -20,20 +20,20 @@ model Activity {
   id           Int           @id @default(autoincrement())
   name         String
   date         DateTime
-  totalCost    Decimal
-  participants Participant[]
+  totalCost    Decimal       @db.Decimal(10, 2)
   isFullyPaid  Boolean       @default(false)
-  isDeleted    Boolean       @default(false)
+  deleteAt     DateTime?
+  participants Participant[]
 }
 
 model Participant {
-  id         Int      @id @default(autoincrement())
-  amount     Decimal  @default(0.00)
-  account    User     @relation(fields: [accountId], references: [id])
+  id         Int       @id @default(autoincrement())
+  amount     Decimal   @default(0.00) @db.Decimal(10, 2)
+  deleteAt   DateTime?
+  account    User      @relation(fields: [accountId], references: [id])
   accountId  Int
-  activity   Activity @relation(fields: [activityId], references: [id])
+  activity   Activity  @relation(fields: [activityId], references: [id])
   activityId Int
-  isDeleted  Boolean  @default(false)
 
   @@unique([accountId, activityId])
 }
