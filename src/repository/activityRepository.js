@@ -85,7 +85,8 @@ const activityRepository = {
       ...updatedData
     } = activityDto;
     try {
-      const updatedActivity = await prisma.activity.update({
+      // update based on privided data
+      await prisma.activity.update({
         data: {
           ...updatedData,
           participants: {
@@ -97,8 +98,31 @@ const activityRepository = {
         where: { id },
         include: { participants: { include: { account: true } } },
       });
+      // get updated activity after update
+      const updatedActivity = await prisma.activity.findUniqueOrThrow({
+        where: { id },
+        include: { participants: true },
+      });
       console.log("updated activity with id ", updatedActivity.id);
-      return updatedActivity;
+      // then check if activity is fully paid
+      const totalPaidAmount = updatedActivity.participants.reduce(
+        (sum, p) => (sum += p.amount),
+        0
+      );
+      const isFullyPaid =
+        totalPaidAmount.toFixed(2) === updatedActivity.totalCost.toFixed(2);
+      // change isFullyPaid status accordingly
+      const updatedAcitivityWithPaidStatus = await prisma.activity.update({
+        data: { isFullyPaid },
+        where: { id },
+        include: { participants: { include: { amount: true } } },
+      });
+      console.log(
+        "updated paid status of activity with id ",
+        updatedAcitivityWithPaidStatus.id
+      );
+
+      return updatedAcitivityWithPaidStatus;
     } catch (error) {
       const errMsg = "Error updating activity ";
       console.error(errMsg, error);
