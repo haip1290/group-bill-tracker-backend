@@ -42,9 +42,48 @@ const activityRepository = {
       throw new Error("Error querying activity by Id");
     }
   },
-
   /**
-   * @description thsi function find all non-delete and unpaid activity that user participated in
+   * @description this function find all activities based on user ID and status (unpaid, achieved, etc...)
+   * @param {number} userId
+   * @param {string} status unpaid, achieved etc ...
+   * @returns {object} activities and total count
+   */
+  getActivitiesByUserIdAndStatus: async (userId, status) => {
+    console.log(`Query ${status} activities by user ID ${userId}`);
+    try {
+      let statusWhere = {};
+      switch (status) {
+        case "unpaid":
+          statusWhere = { isFullyPaid: false };
+          break;
+        case "achieved":
+          statusWhere = { achievedAt: { not: null } };
+          break;
+        default:
+          throw new Error(`Invalid activities status ${status}`);
+      }
+      const where = {
+        participants: { some: { accountId: userId } },
+        deletedAt: null,
+        ...statusWhere,
+      };
+      const [activities, count] = await prisma.$transaction([
+        prisma.activity.findMany({
+          where,
+          include: { participants: { include: { account: true } } },
+        }),
+        prisma.activity.count({ where }),
+      ]);
+      console.log(`Found ${count} ${status} activities by user ID ${userId}`);
+      return { activities, count };
+    } catch (error) {
+      console.error("Error query activities by user ID and status ", error);
+      resourceNotFoundErrorHandler(error);
+      throw error;
+    }
+  },
+  /**
+   * @description this function find all non-delete and unpaid activity that user participated in
    * @param {number} userId id of user
    * @returns {object} list of activities and total count that user participated in
    */
@@ -84,9 +123,7 @@ const activityRepository = {
     try {
       // where clause to query activities
       const where = {
-        participants: {
-          some: { accountId: userId },
-        },
+        participants: { some: { accountId: userId } },
         achievedAt: { not: null },
         deletedAt: null,
       };

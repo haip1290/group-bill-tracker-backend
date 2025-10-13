@@ -7,7 +7,7 @@ const activityRouter = Router();
 activityRouter.use(authenticateJwt);
 
 activityRouter.post("/", activityController.createActivity);
-activityRouter.get("/", activityController.getActivities);
+activityRouter.get("/", activityController.getActivitiesByUserID);
 activityRouter.get("/:id", activityController.getActivityById);
 activityRouter.put("/:id", activityController.updateActivity);
 

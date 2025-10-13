@@ -4,6 +4,7 @@ const activityRepository = require("../repository/activityRepository");
 const {
   validateActivityDtoToCreate,
   validateActivityDtoToUpdate,
+  validateActivityStatus,
 } = require("../validators/activityValidator");
 
 const findParticipantsToUpdate = (currentParticipants, updatedParticipants) => {
@@ -66,15 +67,45 @@ const activityController = {
     }),
   ],
 
-  getActivities: asyncHandler(async (req, res) => {
+  getActivitiesByUserID: asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    console.log("Getting activities by user Id ", userId);
+    const status = req.query.status;
+    validateActivityStatus(status);
+    console.log(`Getting ${status} activities by user Id ${userId}`);
     const { activities, count } =
-      await activityRepository.getActivitiesByUserId(userId);
+      await activityRepository.getActivitiesByUserIdAndStatus(userId, status);
     const activitiesDto = activities.map(activityToDto);
-    console.log(`Successfully fetched ${count} activities`);
+    console.log(
+      `Successfully found ${count} ${status} activities by user ID ${userId}`
+    );
     return res.json({
       message: "Fetch activities successfully",
+      data: { activities: activitiesDto, count },
+    });
+  }),
+
+  getUnpaidActivities: asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    console.log("Getting unpaid activities by user Id ", userId);
+    const { activities, count } =
+      await activityRepository.getUnpaidActivitiesByUserId(userId);
+    const activitiesDto = activities.map(activityToDto);
+    console.log(`Successfully found ${count} unpaid activities`);
+    return res.json({
+      message: "Fetch unpaid activities successfully",
+      data: { activities: activitiesDto, count },
+    });
+  }),
+
+  getAchievedActivities: asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    console.log("Getting achieved activities by user ID ", userId);
+    const { activities, count } =
+      await activityRepository.getAchievedActivitiesByUserId(userId);
+    const activitiesDto = activities.map(activityToDto);
+    console.log(`Successfully found ${count} achieved activities`);
+    return res.json({
+      message: "Fetch achieved activities successfully",
       data: { activities: activitiesDto, count },
     });
   }),
