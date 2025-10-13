@@ -74,7 +74,37 @@ const activityRepository = {
       throw new Error(errMsg);
     }
   },
-
+  /**
+   * @description queries achieved activities and total count by user ID
+   * @param {number} userId
+   * @returns {object} achieved activities and total count
+   */
+  getAchievedActivitiesByUserId: async (userId) => {
+    console.log("Query achieved activites by user ID ", userId);
+    try {
+      // where clause to query activities
+      const where = {
+        participants: {
+          some: { accountId: userId },
+        },
+        achievedAt: { not: null },
+        deletedAt: null,
+      };
+      const [activities, count] = await prisma.$transaction([
+        prisma.activity.findMany({
+          where,
+          include: { participants: { include: { account: true } } },
+        }),
+        prisma.activity.count({ where }),
+      ]);
+      console.log(`Found ${count} achieved activities with user id ${userId}`);
+      return { activities, count };
+    } catch (error) {
+      console.error("Error query achieved activities by user ID ", error);
+      resourceNotFoundErrorHandler(error);
+      throw error;
+    }
+  },
   /**
    * @description this function update activity with provided
    * data (name, data, totalCost and participants etc...)
