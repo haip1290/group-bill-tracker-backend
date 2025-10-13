@@ -22,14 +22,15 @@ model Activity {
   date         DateTime
   totalCost    Decimal       @db.Decimal(10, 2)
   isFullyPaid  Boolean       @default(false)
-  deleteAt     DateTime?
+  achievedAt   DateTime?
+  deletedAt    DateTime?
   participants Participant[]
 }
 
 model Participant {
   id         Int       @id @default(autoincrement())
   amount     Decimal   @default(0.00) @db.Decimal(10, 2)
-  deleteAt   DateTime?
+  deletedAt  DateTime?
   account    User      @relation(fields: [accountId], references: [id])
   accountId  Int
   activity   Activity  @relation(fields: [activityId], references: [id])

@@ -30,7 +30,7 @@ const activityRepository = {
     console.log("Query activity by Id ", id);
     try {
       const activity = await prisma.activity.findUniqueOrThrow({
-        where: { id },
+        where: { id, deletedAt: null },
         include: { participants: { include: { account: true } } },
       });
       console.log("Found activity ", activity.id);
@@ -44,26 +44,32 @@ const activityRepository = {
   },
 
   /**
-   * @description thsi function find all activity that user participated in
+   * @description thsi function find all non-delete and unpaid activity that user participated in
    * @param {number} userId id of user
-   * @returns {Array} activities that user participated in
+   * @returns {object} list of activities and total count that user participated in
    */
-  getActivitiesByUserId: async (userId) => {
-    console.log("Query activities by user id ", userId);
+  getUnpaidActivitiesByUserId: async (userId) => {
+    console.log("Query unpaid, non-deleted activities by user id ", userId);
     try {
+      // where clause to find activity
+      const where = {
+        participants: { some: { accountId: userId } },
+        isFullyPaid: false,
+        deletedAt: null,
+      };
       const [activities, count] = await prisma.$transaction([
         prisma.activity.findMany({
-          where: { participants: { some: { accountId: userId } } },
+          where,
           include: { participants: { include: { account: true } } },
         }),
-        prisma.activity.count({
-          where: { participants: { some: { accountId: userId } } },
-        }),
+        prisma.activity.count({ where }),
       ]);
-      console.log(`Queried ${count} activities by user id ${userId}`);
+      console.log(
+        `Queried unpaid, non-deleted ${count} activities by user id ${userId}`
+      );
       return { activities, count };
     } catch (error) {
-      const errMsg = "Error getting activities by user id ";
+      const errMsg = "Error getting unpaid activities by user id ";
       console.error(errMsg, error);
       throw new Error(errMsg);
     }
@@ -96,7 +102,6 @@ const activityRepository = {
           },
         },
         where: { id },
-        include: { participants: { include: { account: true } } },
       });
       // get updated activity after update
       const updatedActivity = await prisma.activity.findUniqueOrThrow({
@@ -106,23 +111,18 @@ const activityRepository = {
       console.log("updated activity with id ", updatedActivity.id);
       // then check if activity is fully paid
       const totalPaidAmount = updatedActivity.participants.reduce(
-        (sum, p) => (sum += p.amount),
+        (sum, p) => sum + p.amount,
         0
       );
       const isFullyPaid =
         totalPaidAmount.toFixed(2) === updatedActivity.totalCost.toFixed(2);
       // change isFullyPaid status accordingly
-      const updatedAcitivityWithPaidStatus = await prisma.activity.update({
+      const updatedStatusAcitivity = await prisma.activity.update({
         data: { isFullyPaid },
         where: { id },
-        include: { participants: { include: { amount: true } } },
+        include: { participants: { include: { account: true } } },
       });
-      console.log(
-        "updated paid status of activity with id ",
-        updatedAcitivityWithPaidStatus.id
-      );
-
-      return updatedAcitivityWithPaidStatus;
+      return updatedStatusAcitivity;
     } catch (error) {
       const errMsg = "Error updating activity ";
       console.error(errMsg, error);
@@ -130,14 +130,54 @@ const activityRepository = {
       throw error;
     }
   },
+
+  /**
+   * @description achieves activity (set isAchieved) activity
+   * @param {number} id of activity
+   * @returns {object} achieved activity
+   */
+  achieveActivityById: async (id) => {
+    console.log("Achieve activity by id ", id);
+    try {
+      // define where clause
+      const where = {
+        id,
+        isFullyPaid: true,
+        achievedAt: null,
+        deletedAt: null,
+      };
+      const achievedActivity = await prisma.activity.update({
+        data: { achievedAt: new Date() },
+        where,
+        include: { participants: true },
+      });
+      console.log(
+        "Successfully achieved acitivity with id ",
+        achievedActivity.id
+      );
+      return achievedActivity;
+    } catch (error) {
+      console.error("Error achieve activity by id ", error);
+      resourceNotFoundErrorHandler(error);
+      throw error;
+    }
+  },
+  /**
+   * @description this function soft-deleted (set deletedAt) activity
+   * @param {number} id of actvity
+   * @returns {object} soft-deleted activity
+   */
   softDeleteActivityById: async (id) => {
     console.log("Soft-delete activity by id ", id);
     try {
+      const where = { id, deletedAt: null };
       const updatedActivity = await prisma.activity.update({
         data: { deletedAt: new Date() },
-        where: { id },
+        where,
         include: { participants: true },
       });
+      console.log("Soft-deleted activity with id ", updatedActivity.id);
+      return updatedActivity;
     } catch (error) {
       console.error("Error soft-deleting error by id ", error);
       resourceNotFoundErrorHandler(error);

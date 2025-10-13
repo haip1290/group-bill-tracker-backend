@@ -4,6 +4,7 @@ const activityToDto = (activity) => ({
   date: activity.date,
   name: activity.name,
   totalCost: activity.totalCost,
+  isFullyPaid: activity.isFullyPaid,
   participants: activity.participants.map(participantToDto),
 });
 const participantToDto = (participant) => ({
