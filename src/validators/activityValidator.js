@@ -6,12 +6,11 @@ const validateActivityDtoToUpdate = (req, res, next) => {
 };
 
 const validateActivityStatus = (status) => {
-  const validStatus = ["unpaid", "achieved"];
+  const validStatus = ["unpaid", "paid"];
   if (!validStatus.includes(status)) {
-    return res
-      .status(400)
-      .json({ message: "Invalid or missing activity status query parameter." });
+    return undefined;
   }
+  return status;
 };
 
 module.exports = {

@@ -4,7 +4,6 @@ const activityRepository = require("../repository/activityRepository");
 const {
   validateActivityDtoToCreate,
   validateActivityDtoToUpdate,
-  validateActivityStatus,
 } = require("../validators/activityValidator");
 
 const findParticipantsToUpdate = (currentParticipants, updatedParticipants) => {
@@ -67,45 +66,19 @@ const activityController = {
     }),
   ],
 
-  getActivitiesByUserID: asyncHandler(async (req, res) => {
+  getActivitiesByUserId: asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const status = req.query.status;
-    validateActivityStatus(status);
-    console.log(`Getting ${status} activities by user Id ${userId}`);
+    const statusLog = status ? `${status}` : "";
+    console.log(`Getting ${statusLog} activities by user Id ${userId}`);
     const { activities, count } =
       await activityRepository.getActivitiesByUserIdAndStatus(userId, status);
     const activitiesDto = activities.map(activityToDto);
     console.log(
-      `Successfully found ${count} ${status} activities by user ID ${userId}`
+      `Successfully found ${count} ${statusLog} activities by user ID ${userId}`
     );
     return res.json({
-      message: "Fetch activities successfully",
-      data: { activities: activitiesDto, count },
-    });
-  }),
-
-  getUnpaidActivities: asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    console.log("Getting unpaid activities by user Id ", userId);
-    const { activities, count } =
-      await activityRepository.getUnpaidActivitiesByUserId(userId);
-    const activitiesDto = activities.map(activityToDto);
-    console.log(`Successfully found ${count} unpaid activities`);
-    return res.json({
-      message: "Fetch unpaid activities successfully",
-      data: { activities: activitiesDto, count },
-    });
-  }),
-
-  getAchievedActivities: asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    console.log("Getting achieved activities by user ID ", userId);
-    const { activities, count } =
-      await activityRepository.getAchievedActivitiesByUserId(userId);
-    const activitiesDto = activities.map(activityToDto);
-    console.log(`Successfully found ${count} achieved activities`);
-    return res.json({
-      message: "Fetch achieved activities successfully",
+      message: "Fetched activities successfully",
       data: { activities: activitiesDto, count },
     });
   }),
@@ -121,11 +94,11 @@ const activityController = {
     });
   }),
 
-  updateActivity: [
+  updateActivityById: [
     validateActivityDtoToUpdate,
     asyncHandler(async (req, res) => {
-      console.log("Updating activity");
       const activityId = parseInt(req.params.id);
+      console.log(`Updating activity by ID ${activityId}`);
       const {
         participants: updatedParticipants,
         name,
@@ -159,13 +132,25 @@ const activityController = {
       };
       const updatedActivity =
         await activityRepository.updateActivityById(activityDto);
-      console.log("Updated activity ", updatedActivity.id);
+      console.log("Updated activity by ID ", updatedActivity.id);
       return res.json({
         message: "Updated activity",
         data: activityToDto(updatedActivity),
       });
     }),
   ],
+
+  paidActivityById: asyncHandler(async (req, res) => {
+    const id = parseInt(req.params.id);
+    console.log(`Paid activity by ID ${id}`);
+    const paidActivity = await activityRepository.paidActivityById(id);
+    console.log(`Paid activity by ID ${paidActivity.id}`);
+
+    return res.json({
+      message: `paid activity by ID ${paidActivity.id}`,
+      data: { activity: activityToDto(paidActivity) },
+    });
+  }),
 };
 
 module.exports = activityController;

@@ -22,7 +22,6 @@ model Activity {
   date         DateTime
   totalCost    Decimal       @db.Decimal(10, 2)
   isFullyPaid  Boolean       @default(false)
-  achievedAt   DateTime?
   deletedAt    DateTime?
   participants Participant[]
 }

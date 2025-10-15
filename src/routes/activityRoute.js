@@ -7,8 +7,9 @@ const activityRouter = Router();
 activityRouter.use(authenticateJwt);
 
 activityRouter.post("/", activityController.createActivity);
-activityRouter.get("/", activityController.getActivitiesByUserID);
+activityRouter.get("/", activityController.getActivitiesByUserId);
 activityRouter.get("/:id", activityController.getActivityById);
-activityRouter.put("/:id", activityController.updateActivity);
+activityRouter.put("/:id", activityController.updateActivityById);
+activityRouter.put("/:id/paid", activityController.paidActivityById);
 
 module.exports = activityRouter;

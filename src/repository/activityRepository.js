@@ -56,11 +56,11 @@ const activityRepository = {
         case "unpaid":
           statusWhere = { isFullyPaid: false };
           break;
-        case "achieved":
-          statusWhere = { achievedAt: { not: null } };
+        case "paid":
+          statusWhere = { isFullyPaid: true };
           break;
         default:
-          throw new Error(`Invalid activities status ${status}`);
+          console.log(`${status} status is provided`);
       }
       const where = {
         participants: { some: { accountId: userId } },
@@ -82,66 +82,7 @@ const activityRepository = {
       throw error;
     }
   },
-  /**
-   * @description this function find all non-delete and unpaid activity that user participated in
-   * @param {number} userId id of user
-   * @returns {object} list of activities and total count that user participated in
-   */
-  getUnpaidActivitiesByUserId: async (userId) => {
-    console.log("Query unpaid, non-deleted activities by user id ", userId);
-    try {
-      // where clause to find activity
-      const where = {
-        participants: { some: { accountId: userId } },
-        isFullyPaid: false,
-        deletedAt: null,
-      };
-      const [activities, count] = await prisma.$transaction([
-        prisma.activity.findMany({
-          where,
-          include: { participants: { include: { account: true } } },
-        }),
-        prisma.activity.count({ where }),
-      ]);
-      console.log(
-        `Queried unpaid, non-deleted ${count} activities by user id ${userId}`
-      );
-      return { activities, count };
-    } catch (error) {
-      const errMsg = "Error getting unpaid activities by user id ";
-      console.error(errMsg, error);
-      throw new Error(errMsg);
-    }
-  },
-  /**
-   * @description queries achieved activities and total count by user ID
-   * @param {number} userId
-   * @returns {object} achieved activities and total count
-   */
-  getAchievedActivitiesByUserId: async (userId) => {
-    console.log("Query achieved activites by user ID ", userId);
-    try {
-      // where clause to query activities
-      const where = {
-        participants: { some: { accountId: userId } },
-        achievedAt: { not: null },
-        deletedAt: null,
-      };
-      const [activities, count] = await prisma.$transaction([
-        prisma.activity.findMany({
-          where,
-          include: { participants: { include: { account: true } } },
-        }),
-        prisma.activity.count({ where }),
-      ]);
-      console.log(`Found ${count} achieved activities with user id ${userId}`);
-      return { activities, count };
-    } catch (error) {
-      console.error("Error query achieved activities by user ID ", error);
-      resourceNotFoundErrorHandler(error);
-      throw error;
-    }
-  },
+
   /**
    * @description this function update activity with provided
    * data (name, data, totalCost and participants etc...)
@@ -170,26 +111,13 @@ const activityRepository = {
         },
         where: { id },
       });
-      // get updated activity after update
+      // get updated activity with full details
       const updatedActivity = await prisma.activity.findUniqueOrThrow({
-        where: { id },
-        include: { participants: true },
-      });
-      console.log("updated activity with id ", updatedActivity.id);
-      // then check if activity is fully paid
-      const totalPaidAmount = updatedActivity.participants.reduce(
-        (sum, p) => sum + p.amount,
-        0
-      );
-      const isFullyPaid =
-        totalPaidAmount.toFixed(2) === updatedActivity.totalCost.toFixed(2);
-      // change isFullyPaid status accordingly
-      const updatedStatusAcitivity = await prisma.activity.update({
-        data: { isFullyPaid },
         where: { id },
         include: { participants: { include: { account: true } } },
       });
-      return updatedStatusAcitivity;
+      console.log("updated activity with id ", updatedActivity.id);
+      return updatedActivity;
     } catch (error) {
       const errMsg = "Error updating activity ";
       console.error(errMsg, error);
@@ -199,32 +127,48 @@ const activityRepository = {
   },
 
   /**
-   * @description achieves activity (set isAchieved) activity
+   * @description paid activity (set isFullyPaid) activity
    * @param {number} id of activity
-   * @returns {object} achieved activity
+   * @returns {object} paid activity
    */
-  achieveActivityById: async (id) => {
-    console.log("Achieve activity by id ", id);
+  paidActivityById: async (id) => {
+    console.log("Paid activity by id ", id);
     try {
-      // define where clause
+      // define where clause to find activity
       const where = {
         id,
-        isFullyPaid: true,
-        achievedAt: null,
+        isFullyPaid: false,
         deletedAt: null,
       };
-      const achievedActivity = await prisma.activity.update({
-        data: { achievedAt: new Date() },
+      const result = await prisma.activity.updateMany({
+        data: { isFullyPaid: true },
         where,
-        include: { participants: true },
       });
-      console.log(
-        "Successfully achieved acitivity with id ",
-        achievedActivity.id
-      );
-      return achievedActivity;
+      // if found activity
+      if (result.count !== 0) {
+        const paidActivity = await prisma.activity.findUniqueOrThrow({
+          where: { id },
+          include: { participants: { include: { account: true } } },
+        });
+        console.log("Successfully paid acitivity with id ", paidActivity.id);
+        return paidActivity;
+      }
+      // throw error when activity not found (result.count === 0)
+      const activity = await prisma.activity.findUnique({ where: { id } });
+      if (!activity) {
+        // handle not found case
+        const notFoundError = new Error(`Activity with ID ${id} not found`);
+        notFoundError.code = "P2025";
+        notFoundError.meta = { modelName: "Activity" };
+        throw notFoundError;
+      } else {
+        // handle conflict case
+        const conflictError = new Error(`Activity is already fully paid`);
+        conflictError.status = 409;
+        throw conflictError;
+      }
     } catch (error) {
-      console.error("Error achieve activity by id ", error);
+      console.error("Error setting activity to paid by id ", error);
       resourceNotFoundErrorHandler(error);
       throw error;
     }
