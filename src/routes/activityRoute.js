@@ -10,6 +10,9 @@ activityRouter.post("/", activityController.createActivity);
 activityRouter.get("/", activityController.getActivitiesByUserId);
 activityRouter.get("/:id", activityController.getActivityById);
 activityRouter.put("/:id", activityController.updateActivityById);
-activityRouter.put("/:id/paid", activityController.paidActivityById);
+activityRouter.patch(
+  "/:id/paid",
+  activityController.changePaidStatusOfActivityById
+);
 
 module.exports = activityRouter;

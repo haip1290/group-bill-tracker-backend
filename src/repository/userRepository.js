@@ -53,7 +53,7 @@ const userRepository = {
       const user = await prisma.user.findUnique({
         where: { id },
       });
-      console.log("User found", user);
+      console.log("User found");
       return user;
     } catch (error) {
       const errMsg = "Error querying user from DB ";

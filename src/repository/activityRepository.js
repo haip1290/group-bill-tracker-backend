@@ -127,52 +127,51 @@ const activityRepository = {
   },
 
   /**
-   * @description paid activity (set isFullyPaid) activity
+   * @description change paid status (set isFullyPaid) of activity
    * @param {number} id of activity
    * @returns {object} paid activity
    */
-  paidActivityById: async (id) => {
-    console.log("Paid activity by id ", id);
+  changePaidStatusOfActivityById: async (id) => {
+    console.log("Change activity paid status by id ", id);
+    // define where clause to find activity
+    const where = {
+      id,
+      deletedAt: null,
+    };
+    const select = {
+      id: true,
+      isFullyPaid: true,
+    };
     try {
-      // define where clause to find activity
-      const where = {
-        id,
-        isFullyPaid: false,
-        deletedAt: null,
-      };
-      const result = await prisma.activity.updateMany({
-        data: { isFullyPaid: true },
-        where,
-      });
-      // if found activity
-      if (result.count !== 0) {
-        const paidActivity = await prisma.activity.findUniqueOrThrow({
-          where: { id },
-          include: { participants: { include: { account: true } } },
-        });
-        console.log("Successfully paid acitivity with id ", paidActivity.id);
-        return paidActivity;
-      }
-      // throw error when activity not found (result.count === 0)
-      const activity = await prisma.activity.findUnique({ where: { id } });
+      // find activity
+      const activity = await prisma.activity.findUnique({ where, select });
+      // throw error if not found
       if (!activity) {
-        // handle not found case
         const notFoundError = new Error(`Activity with ID ${id} not found`);
         notFoundError.code = "P2025";
         notFoundError.meta = { modelName: "Activity" };
         throw notFoundError;
-      } else {
-        // handle conflict case
-        const conflictError = new Error(`Activity is already fully paid`);
-        conflictError.status = 409;
-        throw conflictError;
       }
+      // flip the status
+      const newPaidStatus = !activity.isFullyPaid;
+      // update status
+      const updatedActivity = await prisma.activity.update({
+        where: { id: activity.id },
+        data: { isFullyPaid: newPaidStatus },
+        include: { participants: { include: { account: true } } },
+      });
+      console.log(
+        `Successfully change paid status of acitivity with id `,
+        updatedActivity.id
+      );
+      return updatedActivity;
     } catch (error) {
-      console.error("Error setting activity to paid by id ", error);
+      console.error("Error setting paid status of activity by id ", error);
       resourceNotFoundErrorHandler(error);
       throw error;
     }
   },
+
   /**
    * @description this function soft-deleted (set deletedAt) activity
    * @param {number} id of actvity

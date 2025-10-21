@@ -140,15 +140,18 @@ const activityController = {
     }),
   ],
 
-  paidActivityById: asyncHandler(async (req, res) => {
+  changePaidStatusOfActivityById: asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id);
-    console.log(`Paid activity by ID ${id}`);
-    const paidActivity = await activityRepository.paidActivityById(id);
-    console.log(`Paid activity by ID ${paidActivity.id}`);
+    console.log(`Change paid status of activity by ID ${id}`);
+    const updatedActivity =
+      await activityRepository.changePaidStatusOfActivityById(id);
+    console.log(
+      `Successfully changed paid status of activity by ID ${updatedActivity.id}`
+    );
 
     return res.json({
-      message: `paid activity by ID ${paidActivity.id}`,
-      data: { activity: activityToDto(paidActivity) },
+      message: `Changed paid status activity by ID ${updatedActivity.id}`,
+      data: { activity: activityToDto(updatedActivity) },
     });
   }),
 };
